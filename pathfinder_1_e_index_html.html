@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Cathedex</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --panel: #18181b;
+      --panel-2: #0f0f12;
+      --border: #27272a;
+      --border-2: #3f3f46;
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --muted-2: #71717a;
+      --accent: #e4e4e7;
+      --accent-text: #0a0a0a;
+      --blue: rgba(59, 130, 246, 0.18);
+      --rose: rgba(244, 63, 94, 0.18);
+      --violet: rgba(139, 92, 246, 0.18);
+      --emerald: rgba(16, 185, 129, 0.18);
+      --amber: rgba(245, 158, 11, 0.18);
+      --red: rgba(239, 68, 68, 0.18);
+      --shadow: 0 20px 40px rgba(0,0,0,0.35);
+      --radius-xl: 18px;
+      --radius-2xl: 24px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    button, input, textarea, select { font: inherit; }
+    body { min-height: 100vh; }
+    .app { max-width: 1600px; margin: 0 auto; padding: 24px; }
+    .hidden { display: none !important; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      background: rgba(24,24,27,0.92);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .title h1 { margin: 0; font-size: 32px; line-height: 1.1; }
+    .title p { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+
+    .view-switcher { display: flex; gap: 8px; }
+    .tab-btn, .btn {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    .tab-btn:hover, .btn:hover { border-color: var(--border-2); transform: translateY(-1px); }
+    .tab-btn.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+    .btn.light { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+    .btn.blue { background: var(--blue); color: #cfe3ff; }
+    .btn.rose { background: var(--rose); color: #ffd2dd; }
+    .btn.violet { background: var(--violet); color: #e8dcff; }
+    .btn.emerald { background: var(--emerald); color: #d4fff0; }
+    .btn.red { background: var(--red); color: #ffd8d8; }
+    .btn.small { padding: 8px 12px; font-size: 12px; border-radius: 12px; }
+    .btn.tiny { padding: 6px 10px; font-size: 12px; border-radius: 999px; }
+    .btn.full { width: 100%; }
+
+    .viewer-grid {
+      display: grid;
+      grid-template-columns: 320px minmax(640px, 1fr) 360px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h3 {
+      margin: 0 0 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .search-wrap { position: relative; margin-bottom: 16px; }
+    .search-wrap input {
+      width: 100%;
+      background: var(--panel-2);
+      border: 1px solid var(--border-2);
+      border-radius: 18px;
+      color: var(--text);
+      padding: 12px 14px;
+      outline: none;
+    }
+
+    .sidebar-actions { display: flex; gap: 8px; margin-bottom: 16px; }
+    .creature-list { display: grid; gap: 10px; max-height: 72vh; overflow-y: auto; padding-right: 4px; }
+    .creature-item {
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      border-radius: 18px;
+      padding: 12px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    .creature-item:hover { border-color: var(--border-2); }
+    .creature-item.active { background: #27272a; border-color: #52525b; }
+    .creature-name { font-weight: 700; }
+    .creature-meta { margin-top: 6px; color: var(--muted); font-size: 12px; }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .hero h2 { margin: 0; font-size: 34px; }
+    .hero p { margin: 6px 0 0; color: var(--muted); }
+    .hero-controls { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .stat-card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); }
+    .stat-value { margin-top: 8px; font-weight: 700; font-size: 18px; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .info-row {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row strong { color: #d4d4d8; }
+    .muted { color: var(--muted); }
+
+    .attack-list, .log-list, .track-list, .builder-list { display: grid; gap: 12px; }
+    .attack-card, .log-card, .track-card, .editor-card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .attack-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .attack-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .small-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .section-gap { margin-top: 22px; }
+    .pill-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+    .condition-pill {
+      border: 1px solid var(--border);
+      background: #27272a;
+      color: #d4d4d8;
+      border-radius: 999px;
+      padding: 7px 12px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .condition-pill.active {
+      background: var(--amber);
+      color: #ffe7b0;
+      border-color: rgba(245,158,11,0.35);
+    }
+
+    .input-group { margin-bottom: 14px; }
+    .input-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+    }
+    .input-group input,
+    .input-group textarea,
+    .input-group select {
+      width: 100%;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border-2);
+      border-radius: 16px;
+      padding: 10px 12px;
+      outline: none;
+    }
+    .input-group textarea { min-height: 110px; resize: vertical; }
+    .input-grid-2, .input-grid-3 { display: grid; gap: 12px; }
+    .input-grid-2 { grid-template-columns: 1fr 1fr; }
+    .input-grid-3 { grid-template-columns: repeat(3, 1fr); }
+
+    .builder-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .builder-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .builder-header h2 { margin: 0; font-size: 28px; }
+    .builder-header p { margin: 6px 0 0; color: var(--muted); }
+    .builder-actions { display: flex; gap: 8px; }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #e4e4e7;
+    }
+    .inline-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .subtle { color: var(--muted); font-size: 13px; }
+    .empty { color: var(--muted-2); font-size: 14px; }
+    .roll-total { margin-top: 8px; font-weight: 700; font-size: 18px; }
+
+    @media (max-width: 1400px) {
+      .viewer-grid { grid-template-columns: 280px 1fr 320px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="title">
+        <h1>Pathfinder 1e Creature Manager</h1>
+        <p>Dark-mode GM dashboard with creature viewer, rollers, combat tracking, and a manual builder.</p>
+      </div>
+      <div class="view-switcher">
+        <button id="viewerTab" class="tab-btn active">Creature Viewer</button>
+        <button id="builderTab" class="tab-btn">Add Creature</button>
+      </div>
+    </header>
+
+    <section id="viewerPage">
+      <div class="viewer-grid">
+        <aside class="panel">
+          <div class="search-wrap">
+            <input id="searchInput" type="text" placeholder="Search creatures..." />
+          </div>
+          <div class="sidebar-actions">
+            <button id="exportBtn" class="btn full">Export JSON</button>
+            <label class="btn full" style="text-align:center; display:flex; align-items:center; justify-content:center;">
+              Import JSON
+              <input id="importInput" type="file" accept="application/json" class="hidden" />
+            </label>
+          </div>
+          <div id="creatureList" class="creature-list"></div>
+        </aside>
+
+        <main id="mainContent"></main>
+
+        <aside id="rightSidebar"></aside>
+      </div>
+    </section>
+
+    <section id="builderPage" class="hidden">
+      <div class="panel">
+        <div class="builder-header">
+          <div>
+            <h2>Add New Creature</h2>
+            <p>Manual Pathfinder 1e stat block builder.</p>
+          </div>
+          <div class="builder-actions">
+            <button id="builderCancel" class="btn">Cancel</button>
+            <button id="builderSave" class="btn light">Save Creature</button>
+          </div>
+        </div>
+        <div id="builderRoot"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const starterCreatures = [
+      {
+        id: "goblin-1",
+        name: "Goblin",
+        cr: "1/3",
+        xp: "135",
+        alignment: "NE",
+        size: "Small",
+        type: "humanoid (goblinoid)",
+        subtype: "goblinoid",
+        initiative: 6,
+        senses: "darkvision 60 ft.",
+        perception: 10,
+        aura: "",
+        ac: { total: 16, touch: 13, flatFooted: 14 },
+        hp: { max: 6, current: 6, hd: "1d8+2" },
+        saves: { fort: 3, ref: 4, will: -1 },
+        defensiveAbilities: "",
+        dr: "",
+        immunities: "",
+        resistances: "",
+        weaknesses: "",
+        speed: "30 ft.",
+        space: "5 ft.",
+        reach: "5 ft.",
+        melee: [
+          { name: "Dogslicer", attackBonus: 2, damage: "1d4", damageBonus: 1, crit: "19-20/x2", notes: "" }
+        ],
+        ranged: [
+          { name: "Shortbow", attackBonus: 4, damage: "1d4", damageBonus: 0, crit: "x3", notes: "range 60 ft." }
+        ],
+        specialAttacks: "",
+        spellLikeAbilities: [],
+        spells: "",
+        abilities: { str: 11, dex: 15, con: 12, int: 10, wis: 9, cha: 6 },
+        bab: 1,
+        cmb: 0,
+        cmd: 12,
+        feats: "Improved Initiative",
+        skills: "Ride +10, Stealth +10",
+        languages: "Goblin",
+        specialQualities: "",
+        environment: "temperate forests",
+        organization: "gang (4-9)",
+        treasure: "NPC gear (leather armor, shield, dogslicer, shortbow with 20 arrows)",
+        specialAbilitiesText: "Skilled Rider (Ex): Goblins gain a +4 racial bonus on Ride checks.",
+        conditions: [],
+        abilityUses: [
+          { name: "Throw Fire", current: 2, max: 2 }
+        ],
+        customButtons: [
+          { label: "Sneaky Shot", roll: "1d20+4", type: "attack" }
+        ],
+        notes: ""
+      },
+      {
+        id: "wolf-1",
+        name: "Wolf",
+        cr: "1",
+        xp: "400",
+        alignment: "N",
+        size: "Medium",
+        type: "animal",
+        subtype: "",
+        initiative: 2,
+        senses: "low-light vision, scent",
+        perception: 8,
+        aura: "",
+        ac: { total: 14, touch: 12, flatFooted: 12 },
+        hp: { max: 13, current: 13, hd: "2d8+4" },
+        saves: { fort: 5, ref: 5, will: 1 },
+        defensiveAbilities: "",
+        dr: "",
+        immunities: "",
+        resistances: "",
+        weaknesses: "",
+        speed: "50 ft.",
+        space: "5 ft.",
+        reach: "5 ft.",
+        melee: [
+          { name: "Bite", attackBonus: 2, damage: "1d6", damageBonus: 1, crit: "x2", notes: "trip" }
+        ],
+        ranged: [],
+        specialAttacks: "trip",
+        spellLikeAbilities: [],
+        spells: "",
+        abilities: { str: 13, dex: 15, con: 15, int: 2, wis: 12, cha: 6 },
+        bab: 1,
+        cmb: 2,
+        cmd: 14,
+        feats: "Skill Focus (Perception)",
+        skills: "Perception +8, Stealth +6, Survival +1 (+5 scent tracking)",
+        languages: "",
+        specialQualities: "",
+        environment: "temperate forests",
+        organization: "solitary, pair, or pack (7-16)",
+        treasure: "none",
+        specialAbilitiesText: "Trip (Ex): A wolf that hits with a bite attack can attempt to trip its opponent as a free action without provoking an attack of opportunity.",
+        conditions: [],
+        abilityUses: [],
+        customButtons: [
+          { label: "Trip Check", roll: "1d20+2", type: "custom" }
+        ],
+        notes: ""
+      },
+      {
+        id: "quasit-1",
+        name: "Quasit",
+        cr: "2",
+        xp: "600",
+        alignment: "CE",
+        size: "Tiny",
+        type: "outsider (chaotic, demon, evil, extraplanar)",
+        subtype: "chaotic, demon, evil, extraplanar",
+        initiative: 7,
+        senses: "darkvision 60 ft.",
+        perception: 7,
+        aura: "",
+        ac: { total: 18, touch: 15, flatFooted: 15 },
+        hp: { max: 15, current: 15, hd: "3d10" },
+        saves: { fort: 3, ref: 6, will: 4 },
+        defensiveAbilities: "DR 5/cold iron or good",
+        dr: "5/cold iron or good",
+        immunities: "poison",
+        resistances: "fire 10",
+        weaknesses: "",
+        speed: "20 ft., fly 50 ft. (perfect)",
+        space: "2-1/2 ft.",
+        reach: "0 ft.",
+        melee: [
+          { name: "2 Claws", attackBonus: 8, damage: "1d3", damageBonus: -1, crit: "x2", notes: "plus poison" },
+          { name: "Bite", attackBonus: 8, damage: "1d4", damageBonus: -1, crit: "x2", notes: "" }
+        ],
+        ranged: [],
+        specialAttacks: "poison",
+        spellLikeAbilities: [
+          { name: "Detect Good", uses: "at will", dc: "", roll: "" },
+          { name: "Detect Magic", uses: "at will", dc: "", roll: "" },
+          { name: "Invisibility", uses: "at will (self only)", dc: "", roll: "" },
+          { name: "Cause Fear", uses: "1/day", dc: "11", roll: "1d20+0" }
+        ],
+        spells: "",
+        abilities: { str: 8, dex: 17, con: 11, int: 11, wis: 12, cha: 10 },
+        bab: 3,
+        cmb: 1,
+        cmd: 14,
+        feats: "Weapon Finesse, Improved Initiative",
+        skills: "Bluff +6, Fly +21, Intimidate +6, Knowledge (planes) +6, Perception +7, Stealth +21",
+        languages: "Abyssal, Common",
+        specialQualities: "change shape (bat, centipede, toad, wolf), fast healing 2",
+        environment: "any",
+        organization: "solitary or gang (2-5)",
+        treasure: "none",
+        specialAbilitiesText: "Poison (Ex): Claw—injury; save Fort DC 13; frequency 1/round for 4 rounds; effect 1d2 Dex; cure 1 save.",
+        conditions: [],
+        abilityUses: [
+          { name: "Cause Fear", current: 1, max: 1 }
+        ],
+        customButtons: [
+          { label: "Poison Save DC", roll: "DC 13", type: "custom" }
+        ],
+        notes: ""
+      }
+    ];
+
+    const conditionOptions = ["Blinded", "Dazed", "Entangled", "Fatigued", "Flat-Footed", "Frightened", "Grappled", "Invisible", "Panicked", "Paralyzed", "Pinned", "Prone", "Shaken", "Sickened", "Staggered", "Stunned"];
+
+    const state = {
+      creatures: deepClone(starterCreatures),
+      selectedId: starterCreatures[0].id,
+      page: 'viewer',
+      search: '',
+      rollLog: [],
+      formData: defaultCreature()
+    };
+
+    function defaultCreature() {
+      return {
+        id: `creature-${Date.now()}`,
+        name: "",
+        cr: "",
+        xp: "",
+        alignment: "",
+        size: "",
+        type: "",
+        subtype: "",
+        initiative: 0,
+        senses: "",
+        perception: 0,
+        aura: "",
+        ac: { total: 10, touch: 10, flatFooted: 10 },
+        hp: { max: 1, current: 1, hd: "1d8" },
+        saves: { fort: 0, ref: 0, will: 0 },
+        defensiveAbilities: "",
+        dr: "",
+        immunities: "",
+        resistances: "",
+        weaknesses: "",
+        speed: "",
+        space: "5 ft.",
+        reach: "5 ft.",
+        melee: [],
+        ranged: [],
+        specialAttacks: "",
+        spellLikeAbilities: [],
+        spells: "",
+        abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+        bab: 0,
+        cmb: 0,
+        cmd: 10,
+        feats: "",
+        skills: "",
+        languages: "",
+        specialQualities: "",
+        environment: "",
+        organization: "",
+        treasure: "",
+        specialAbilitiesText: "",
+        conditions: [],
+        abilityUses: [],
+        customButtons: [],
+        notes: ""
+      };
+    }
+
+    function deepClone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function signed(value) {
+      const n = Number(value || 0);
+      return n >= 0 ? `+${n}` : `${n}`;
+    }
+
+    function selectedCreature() {
+      return state.creatures.find(c => c.id === state.selectedId) || state.creatures[0] || null;
+    }
+
+    function filteredCreatures() {
+      const q = state.search.trim().toLowerCase();
+      if (!q) return state.creatures;
+      return state.creatures.filter(c => [c.name, c.type, c.alignment, c.cr].some(v => String(v || '').toLowerCase().includes(q)));
+    }
+
+    function rollDie(sides) {
+      return Math.floor(Math.random() * sides) + 1;
+    }
+
+    function parseDiceExpression(expression) {
+      const cleaned = String(expression || '').replace(/\s+/g, '');
+      const match = cleaned.match(/^(\d*)d(\d+)([+-]\d+)?$/i);
+      if (!match) return null;
+      return {
+        count: Number(match[1] || 1),
+        sides: Number(match[2]),
+        modifier: Number(match[3] || 0)
+      };
+    }
+
+    function executeDiceRoll(expression) {
+      const parsed = parseDiceExpression(expression);
+      if (!parsed) return { total: null, breakdown: expression, valid: false };
+      const rolls = Array.from({ length: parsed.count }, () => rollDie(parsed.sides));
+      const total = rolls.reduce((a, b) => a + b, 0) + parsed.modifier;
+      const modifierText = parsed.modifier === 0 ? '' : parsed.modifier > 0 ? ` + ${parsed.modifier}` : ` - ${Math.abs(parsed.modifier)}`;
+      return {
+        total,
+        valid: true,
+        breakdown: `${parsed.count}d${parsed.sides}: [${rolls.join(', ')}]${modifierText} = ${total}`
+      };
+    }
+
+    function addRollLog(title, result) {
+      state.rollLog.unshift({ id: Date.now() + Math.random(), title, ...result });
+      state.rollLog = state.rollLog.slice(0, 20);
+      render();
+    }
+
+    function updateSelectedCreature(mutator) {
+      state.creatures = state.creatures.map(c => {
+        if (c.id !== state.selectedId) return c;
+        const copy = deepClone(c);
+        mutator(copy);
+        return copy;
+      });
+      render();
+    }
+
+    function resetSelectedCreature() {
+      const original = starterCreatures.find(c => c.id === state.selectedId);
+      if (original) {
+        state.creatures = state.creatures.map(c => c.id === state.selectedId ? deepClone(original) : c);
+      } else {
+        updateSelectedCreature(c => {
+          c.hp.current = c.hp.max;
+          c.conditions = [];
+          c.abilityUses = c.abilityUses.map(u => ({ ...u, current: u.max }));
+        });
+        return;
+      }
+      render();
+    }
+
+    function exportJson() {
+      const blob = new Blob([JSON.stringify(state.creatures, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pathfinder-creatures.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importJson(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(String(e.target.result || '[]'));
+          if (!Array.isArray(parsed)) throw new Error('JSON must be an array of creatures.');
+          state.creatures = parsed;
+          state.selectedId = parsed[0]?.id || null;
+          render();
+        } catch (err) {
+          alert(`Import failed: ${err.message}`);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function rollAttack(section, item) {
+      const creature = selectedCreature();
+      const result = executeDiceRoll(`1d20${item.attackBonus >= 0 ? '+' : ''}${item.attackBonus}`);
+      addRollLog(`${creature.name} - ${section}: ${item.name}`, result);
+    }
+
+    function rollDamage(section, item) {
+      const creature = selectedCreature();
+      const expr = `${item.damage}${item.damageBonus ? item.damageBonus > 0 ? '+' + item.damageBonus : item.damageBonus : ''}`;
+      const result = executeDiceRoll(expr);
+      addRollLog(`${creature.name} - ${section} damage: ${item.name}`, result);
+    }
+
+    function rollInitiative() {
+      const creature = selectedCreature();
+      const result = executeDiceRoll(`1d20${creature.initiative >= 0 ? '+' : ''}${creature.initiative}`);
+      addRollLog(`${creature.name} - Initiative`, result);
+    }
+
+    function rollCustom(label, roll) {
+      const creature = selectedCreature();
+      const result = executeDiceRoll(roll);
+      addRollLog(`${creature.name} - ${label}`, result.valid ? result : { total: null, breakdown: roll, valid: false });
+    }
+
+    function abilityMod(score) {
+      return Math.floor((Number(score) - 10) / 2);
+    }
+
+    function esc(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function renderCreatureList() {
+      const list = document.getElementById('creatureList');
+      const creatures = filteredCreatures();
+      list.innerHTML = creatures.map(c => `
+        <div class="creature-item ${c.id === state.selectedId ? 'active' : ''}" data-id="${esc(c.id)}">
+          <div class="creature-name">${esc(c.name)}</div>
+          <div class="creature-meta">CR ${esc(c.cr)} • ${esc(c.alignment)} • ${esc(c.size)} ${esc(c.type)}</div>
+        </div>
+      `).join('') || `<div class="empty">No creatures found.</div>`;
+
+      list.querySelectorAll('.creature-item').forEach(item => {
+        item.addEventListener('click', () => {
+          state.selectedId = item.dataset.id;
+          render();
+        });
+      });
+    }
+
+    function infoRow(label, value) {
+      if (!value) return '';
+      return `<div class="info-row"><strong>${esc(label)}:</strong> <span class="muted">${esc(value)}</span></div>`;
+    }
+
+    function renderAttackSection(title, items, kind) {
+      if (!items.length) {
+        return `
+          <div class="section-gap">
+            <div class="section-title">${esc(title)}</div>
+            <div class="empty">No ${title.toLowerCase()} attacks.</div>
+          </div>
+        `;
+      }
+      return `
+        <div class="section-gap">
+          <div class="section-title">${esc(title)}</div>
+          <div class="attack-list">
+            ${items.map((item, index) => `
+              <div class="attack-card">
+                <div class="attack-row">
+                  <div>
+                    <div><strong>${esc(item.name)}</strong></div>
+                    <div class="small-meta">Atk ${esc(signed(item.attackBonus))} • Dmg ${esc(item.damage)}${item.damageBonus ? esc(signed(item.damageBonus)) : ''} • Crit ${esc(item.crit || '—')}${item.notes ? ` • ${esc(item.notes)}` : ''}</div>
+                  </div>
+                  <div class="attack-actions">
+                    <button class="btn blue small" data-action="attack" data-kind="${esc(kind)}" data-index="${index}">Attack</button>
+                    <button class="btn rose small" data-action="damage" data-kind="${esc(kind)}" data-index="${index}">Damage</button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMainContent() {
+      const creature = selectedCreature();
+      const main = document.getElementById('mainContent');
+      if (!creature) {
+        main.innerHTML = `<div class="panel"><div class="empty">No creature selected.</div></div>`;
+        return;
+      }
+
+      main.innerHTML = `
+        <div class="panel">
+          <div class="hero">
+            <div>
+              <h2>${esc(creature.name)}</h2>
+              <p>CR ${esc(creature.cr)} • XP ${esc(creature.xp)}</p>
+              <p>${esc(creature.alignment)} ${esc(creature.size)} ${esc(creature.type)}${creature.subtype ? ` (${esc(creature.subtype)})` : ''}</p>
+            </div>
+            <div class="hero-controls">
+              <button id="rollInitBtn" class="btn blue">Roll Initiative</button>
+              <button id="resetCreatureBtn" class="btn red">Reset</button>
+            </div>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-card"><div class="stat-label">Init</div><div class="stat-value">${esc(signed(creature.initiative))}</div></div>
+            <div class="stat-card"><div class="stat-label">AC</div><div class="stat-value">${esc(creature.ac.total)} / T ${esc(creature.ac.touch)} / FF ${esc(creature.ac.flatFooted)}</div></div>
+            <div class="stat-card"><div class="stat-label">HP</div><div class="stat-value">${esc(creature.hp.current)}/${esc(creature.hp.max)}</div></div>
+            <div class="stat-card"><div class="stat-label">Saves</div><div class="stat-value">F ${esc(signed(creature.saves.fort))} • R ${esc(signed(creature.saves.ref))} • W ${esc(signed(creature.saves.will))}</div></div>
+          </div>
+        </div>
+
+        <div class="two-col section-gap">
+          <div class="panel">
+            <h3>Defense</h3>
+            ${infoRow('Senses', `${creature.senses}${creature.perception !== undefined ? `; Perception ${signed(creature.perception)}` : ''}`)}
+            ${infoRow('Aura', creature.aura)}
+            ${infoRow('Defensive Abilities', creature.defensiveAbilities)}
+            ${infoRow('DR', creature.dr)}
+            ${infoRow('Immunities', creature.immunities)}
+            ${infoRow('Resistances', creature.resistances)}
+            ${infoRow('Weaknesses', creature.weaknesses)}
+          </div>
+          <div class="panel">
+            <h3>Offense</h3>
+            ${infoRow('Speed', creature.speed)}
+            ${infoRow('Space', creature.space)}
+            ${infoRow('Reach', creature.reach)}
+            ${infoRow('Special Attacks', creature.specialAttacks)}
+            ${infoRow('Spells', creature.spells)}
+          </div>
+        </div>
+
+        <div class="panel section-gap">
+          <h3>Attacks & Rollers</h3>
+          ${renderAttackSection('Melee', creature.melee, 'melee')}
+          ${renderAttackSection('Ranged', creature.ranged, 'ranged')}
+
+          <div class="section-gap">
+            <div class="section-title">Spell-Like Abilities</div>
+            <div class="attack-list">
+              ${creature.spellLikeAbilities.length ? creature.spellLikeAbilities.map((sla, index) => `
+                <div class="attack-card">
+                  <div class="attack-row">
+                    <div>
+                      <div><strong>${esc(sla.name)}</strong></div>
+                      <div class="small-meta">Uses: ${esc(sla.uses || '—')}${sla.dc ? ` • DC ${esc(sla.dc)}` : ''}</div>
+                    </div>
+                    <div class="attack-actions">
+                      ${sla.roll ? `<button class="btn violet small" data-action="sla-roll" data-index="${index}">Roll</button>` : ''}
+                    </div>
+                  </div>
+                </div>
+              `).join('') : `<div class="empty">No spell-like abilities.</div>`}
+            </div>
+          </div>
+
+          <div class="section-gap">
+            <div class="section-title">Custom Buttons</div>
+            <div class="pill-wrap">
+              ${creature.customButtons.length ? creature.customButtons.map((button, index) => `
+                <button class="btn emerald" data-action="custom-roll" data-index="${index}">${esc(button.label)}</button>
+              `).join('') : `<div class="empty">No custom buttons.</div>`}
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col section-gap">
+          <div class="panel">
+            <h3>Statistics</h3>
+            <div class="input-grid-3">
+              ${Object.entries(creature.abilities).map(([key, value]) => `
+                <div class="stat-card" style="text-align:center;">
+                  <div class="stat-label">${esc(key.toUpperCase())}</div>
+                  <div class="stat-value">${esc(value)}</div>
+                  <div class="small-meta">mod ${esc(signed(abilityMod(value)))}</div>
+                </div>
+              `).join('')}
+            </div>
+            <div class="section-gap">
+              ${infoRow('Base Atk', signed(creature.bab))}
+              ${infoRow('CMB', signed(creature.cmb))}
+              ${infoRow('CMD', creature.cmd)}
+              ${infoRow('Feats', creature.feats)}
+              ${infoRow('Skills', creature.skills)}
+              ${infoRow('Languages', creature.languages)}
+              ${infoRow('SQ', creature.specialQualities)}
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Ecology & Notes</h3>
+            ${infoRow('Environment', creature.environment)}
+            ${infoRow('Organization', creature.organization)}
+            ${infoRow('Treasure', creature.treasure)}
+            ${infoRow('Special Abilities', creature.specialAbilitiesText)}
+            ${infoRow('Notes', creature.notes)}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('rollInitBtn').addEventListener('click', rollInitiative);
+      document.getElementById('resetCreatureBtn').addEventListener('click', resetSelectedCreature);
+
+      main.querySelectorAll('[data-action="attack"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const items = creature[btn.dataset.kind];
+          rollAttack(btn.dataset.kind === 'melee' ? 'Melee' : 'Ranged', items[Number(btn.dataset.index)]);
+        });
+      });
+
+      main.querySelectorAll('[data-action="damage"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const items = creature[btn.dataset.kind];
+          rollDamage(btn.dataset.kind === 'melee' ? 'Melee' : 'Ranged', items[Number(btn.dataset.index)]);
+        });
+      });
+
+      main.querySelectorAll('[data-action="sla-roll"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const sla = creature.spellLikeAbilities[Number(btn.dataset.index)];
+          rollCustom(sla.name, sla.roll);
+        });
+      });
+
+      main.querySelectorAll('[data-action="custom-roll"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const custom = creature.customButtons[Number(btn.dataset.index)];
+          rollCustom(custom.label, custom.roll);
+        });
+      });
+    }
+
+    function renderRightSidebar() {
+      const creature = selectedCreature();
+      const root = document.getElementById('rightSidebar');
+      if (!creature) {
+        root.innerHTML = '';
+        return;
+      }
+
+      root.innerHTML = `
+        <div class="panel">
+          <h3>Combat Controls</h3>
+
+          <div class="input-group">
+            <label>Current HP</label>
+            <div class="input-grid-3">
+              <input id="currentHpInput" type="number" value="${esc(creature.hp.current)}" />
+              <button id="hpMinusBtn" class="btn">-1</button>
+              <button id="hpPlusBtn" class="btn">+1</button>
+            </div>
+          </div>
+
+          <div class="section-gap">
+            <div class="section-title">Conditions</div>
+            <div class="pill-wrap">
+              ${conditionOptions.map(condition => `
+                <button class="condition-pill ${creature.conditions.includes(condition) ? 'active' : ''}" data-condition="${esc(condition)}">${esc(condition)}</button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="section-gap">
+            <div class="section-title">Temporary Stat Debuffs</div>
+            <div class="input-grid-2">
+              ${Object.entries(creature.abilities).map(([key, value]) => `
+                <div class="input-group" style="margin-bottom:0;">
+                  <label>${esc(key.toUpperCase())}</label>
+                  <input type="number" data-ability="${esc(key)}" value="${esc(value)}" />
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="section-gap">
+            <div class="section-title">Ability Uses Left</div>
+            <div class="track-list">
+              ${creature.abilityUses.length ? creature.abilityUses.map((ability, index) => `
+                <div class="track-card">
+                  <div class="attack-row">
+                    <div>
+                      <div><strong>${esc(ability.name)}</strong></div>
+                      <div class="small-meta">${esc(ability.current)} / ${esc(ability.max)}</div>
+                    </div>
+                    <div class="attack-actions">
+                      <button class="btn small" data-ability-use="minus" data-index="${index}">-</button>
+                      <button class="btn small" data-ability-use="plus" data-index="${index}">+</button>
+                    </div>
+                  </div>
+                </div>
+              `).join('') : `<div class="empty">No tracked abilities.</div>`}
+            </div>
+          </div>
+        </div>
+
+        <div class="panel section-gap">
+          <h3>Roll Log</h3>
+          <div class="log-list">
+            ${state.rollLog.length ? state.rollLog.map(entry => `
+              <div class="log-card">
+                <div><strong>${esc(entry.title)}</strong></div>
+                <div class="small-meta">${esc(entry.breakdown)}</div>
+                ${entry.valid ? `<div class="roll-total">Total: ${esc(entry.total)}</div>` : ''}
+              </div>
+            `).join('') : `<div class="empty">Your recent dice rolls will appear here.</div>`}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('currentHpInput').addEventListener('input', (e) => {
+        updateSelectedCreature(c => { c.hp.current = Number(e.target.value || 0); });
+      });
+      document.getElementById('hpMinusBtn').addEventListener('click', () => {
+        updateSelectedCreature(c => { c.hp.current = Math.max(0, c.hp.current - 1); });
+      });
+      document.getElementById('hpPlusBtn').addEventListener('click', () => {
+        updateSelectedCreature(c => { c.hp.current = Math.min(c.hp.max, c.hp.current + 1); });
+      });
+
+      root.querySelectorAll('[data-condition]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const condition = btn.dataset.condition;
+          updateSelectedCreature(c => {
+            if (c.conditions.includes(condition)) c.conditions = c.conditions.filter(item => item !== condition);
+            else c.conditions.push(condition);
+          });
+        });
+      });
+
+      root.querySelectorAll('[data-ability]').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const key = e.target.dataset.ability;
+          updateSelectedCreature(c => { c.abilities[key] = Number(e.target.value || 0); });
+        });
+      });
+
+      root.querySelectorAll('[data-ability-use]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const index = Number(btn.dataset.index);
+          const direction = btn.dataset.abilityUse;
+          updateSelectedCreature(c => {
+            if (direction === 'minus') c.abilityUses[index].current = Math.max(0, c.abilityUses[index].current - 1);
+            else c.abilityUses[index].current = Math.min(c.abilityUses[index].max, c.abilityUses[index].current + 1);
+          });
+        });
+      });
+    }
+
+    function builderInput(label, path, value, type = 'text') {
+      return `
+        <div class="input-group">
+          <label>${esc(label)}</label>
+          <input type="${esc(type)}" value="${esc(value)}" data-path="${esc(path)}" />
+        </div>
+      `;
+    }
+
+    function builderTextarea(label, path, value) {
+      return `
+        <div class="input-group">
+          <label>${esc(label)}</label>
+          <textarea data-path="${esc(path)}">${esc(value)}</textarea>
+        </div>
+      `;
+    }
+
+    function setFormValue(path, value) {
+      const keys = path.split('.');
+      let ref = state.formData;
+      for (let i = 0; i < keys.length - 1; i++) ref = ref[keys[i]];
+      ref[keys[keys.length - 1]] = value;
+    }
+
+    function renderBuilder() {
+      const f = state.formData;
+      const root = document.getElementById('builderRoot');
+      root.innerHTML = `
+        <div class="builder-grid">
+          <div class="panel">
+            <h3>Identity</h3>
+            ${builderInput('Name', 'name', f.name)}
+            ${builderInput('CR', 'cr', f.cr)}
+            ${builderInput('XP', 'xp', f.xp)}
+            ${builderInput('Alignment', 'alignment', f.alignment)}
+            ${builderInput('Size', 'size', f.size)}
+            ${builderInput('Type', 'type', f.type)}
+            ${builderInput('Subtype', 'subtype', f.subtype)}
+            ${builderInput('Initiative', 'initiative', f.initiative, 'number')}
+            ${builderInput('Senses', 'senses', f.senses)}
+            ${builderInput('Perception', 'perception', f.perception, 'number')}
+            ${builderInput('Aura', 'aura', f.aura)}
+          </div>
+
+          <div class="panel">
+            <h3>Defense</h3>
+            ${builderInput('AC', 'ac.total', f.ac.total, 'number')}
+            ${builderInput('Touch AC', 'ac.touch', f.ac.touch, 'number')}
+            ${builderInput('Flat-Footed AC', 'ac.flatFooted', f.ac.flatFooted, 'number')}
+            ${builderInput('Max HP', 'hp.max', f.hp.max, 'number')}
+            ${builderInput('Hit Dice', 'hp.hd', f.hp.hd)}
+            ${builderInput('Fort Save', 'saves.fort', f.saves.fort, 'number')}
+            ${builderInput('Ref Save', 'saves.ref', f.saves.ref, 'number')}
+            ${builderInput('Will Save', 'saves.will', f.saves.will, 'number')}
+            ${builderInput('Defensive Abilities', 'defensiveAbilities', f.defensiveAbilities)}
+            ${builderInput('DR', 'dr', f.dr)}
+            ${builderInput('Immunities', 'immunities', f.immunities)}
+            ${builderInput('Resistances', 'resistances', f.resistances)}
+            ${builderInput('Weaknesses', 'weaknesses', f.weaknesses)}
+          </div>
+
+          <div class="panel">
+            <h3>Offense</h3>
+            ${builderInput('Speed', 'speed', f.speed)}
+            ${builderInput('Space', 'space', f.space)}
+            ${builderInput('Reach', 'reach', f.reach)}
+            ${builderInput('Special Attacks', 'specialAttacks', f.specialAttacks)}
+            ${builderInput('Spells', 'spells', f.spells)}
+
+            <div class="section-gap">
+              <div class="inline-actions">
+                <div class="section-title">Melee Attacks</div>
+                <button class="btn small" id="addMeleeBtn">Add</button>
+              </div>
+              <div class="builder-list">
+                ${f.melee.length ? f.melee.map((item, index) => attackEditor(item, 'melee', index)).join('') : `<div class="empty">No melee attacks added.</div>`}
+              </div>
+            </div>
+
+            <div class="section-gap">
+              <div class="inline-actions">
+                <div class="section-title">Ranged Attacks</div>
+                <button class="btn small" id="addRangedBtn">Add</button>
+              </div>
+              <div class="builder-list">
+                ${f.ranged.length ? f.ranged.map((item, index) => attackEditor(item, 'ranged', index)).join('') : `<div class="empty">No ranged attacks added.</div>`}
+              </div>
+            </div>
+
+            <div class="section-gap">
+              <div class="inline-actions">
+                <div class="section-title">Spell-Like Abilities</div>
+                <button class="btn small" id="addSlaBtn">Add</button>
+              </div>
+              <div class="builder-list">
+                ${f.spellLikeAbilities.length ? f.spellLikeAbilities.map((item, index) => `
+                  <div class="editor-card input-grid-2">
+                    ${builderInput('Name', `spellLikeAbilities.${index}.name`, item.name)}
+                    ${builderInput('Uses', `spellLikeAbilities.${index}.uses`, item.uses)}
+                    ${builderInput('DC', `spellLikeAbilities.${index}.dc`, item.dc)}
+                    ${builderInput('Roll Expression', `spellLikeAbilities.${index}.roll`, item.roll)}
+                  </div>
+                `).join('') : `<div class="empty">No spell-like abilities added.</div>`}
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Statistics & Extras</h3>
+            <div class="input-grid-2">
+              ${builderInput('STR', 'abilities.str', f.abilities.str, 'number')}
+              ${builderInput('DEX', 'abilities.dex', f.abilities.dex, 'number')}
+              ${builderInput('CON', 'abilities.con', f.abilities.con, 'number')}
+              ${builderInput('INT', 'abilities.int', f.abilities.int, 'number')}
+              ${builderInput('WIS', 'abilities.wis', f.abilities.wis, 'number')}
+              ${builderInput('CHA', 'abilities.cha', f.abilities.cha, 'number')}
+              ${builderInput('BAB', 'bab', f.bab, 'number')}
+              ${builderInput('CMB', 'cmb', f.cmb, 'number')}
+              ${builderInput('CMD', 'cmd', f.cmd, 'number')}
+              ${builderInput('Feats', 'feats', f.feats)}
+              ${builderInput('Skills', 'skills', f.skills)}
+              ${builderInput('Languages', 'languages', f.languages)}
+              ${builderInput('SQ', 'specialQualities', f.specialQualities)}
+              ${builderInput('Environment', 'environment', f.environment)}
+              ${builderInput('Organization', 'organization', f.organization)}
+              ${builderInput('Treasure', 'treasure', f.treasure)}
+            </div>
+            ${builderTextarea('Special Abilities Text', 'specialAbilitiesText', f.specialAbilitiesText)}
+            ${builderTextarea('Notes', 'notes', f.notes)}
+
+            <div class="section-gap">
+              <div class="inline-actions">
+                <div class="section-title">Tracked Ability Uses</div>
+                <button class="btn small" id="addAbilityUseBtn">Add</button>
+              </div>
+              <div class="builder-list">
+                ${f.abilityUses.length ? f.abilityUses.map((item, index) => `
+                  <div class="editor-card input-grid-3">
+                    ${builderInput('Name', `abilityUses.${index}.name`, item.name)}
+                    ${builderInput('Current', `abilityUses.${index}.current`, item.current, 'number')}
+                    ${builderInput('Max', `abilityUses.${index}.max`, item.max, 'number')}
+                  </div>
+                `).join('') : `<div class="empty">No tracked abilities added.</div>`}
+              </div>
+            </div>
+
+            <div class="section-gap">
+              <div class="inline-actions">
+                <div class="section-title">Custom Roll Buttons</div>
+                <button class="btn small" id="addCustomBtn">Add</button>
+              </div>
+              <div class="builder-list">
+                ${f.customButtons.length ? f.customButtons.map((item, index) => `
+                  <div class="editor-card input-grid-2">
+                    ${builderInput('Label', `customButtons.${index}.label`, item.label)}
+                    ${builderInput('Roll', `customButtons.${index}.roll`, item.roll)}
+                  </div>
+                `).join('') : `<div class="empty">No custom buttons added.</div>`}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      root.querySelectorAll('[data-path]').forEach(el => {
+        const isNumber = el.type === 'number';
+        const eventName = el.tagName === 'TEXTAREA' ? 'input' : 'input';
+        el.addEventListener(eventName, (e) => {
+          setFormValue(e.target.dataset.path, isNumber ? Number(e.target.value || 0) : e.target.value);
+        });
+      });
+
+      const addAttack = (key) => {
+        state.formData[key].push({ name: '', attackBonus: 0, damage: '1d6', damageBonus: 0, crit: 'x2', notes: '' });
+        render();
+      };
+
+      document.getElementById('addMeleeBtn')?.addEventListener('click', () => addAttack('melee'));
+      document.getElementById('addRangedBtn')?.addEventListener('click', () => addAttack('ranged'));
+      document.getElementById('addSlaBtn')?.addEventListener('click', () => {
+        state.formData.spellLikeAbilities.push({ name: '', uses: '', dc: '', roll: '' });
+        render();
+      });
+      document.getElementById('addAbilityUseBtn')?.addEventListener('click', () => {
+        state.formData.abilityUses.push({ name: '', current: 1, max: 1 });
+        render();
+      });
+      document.getElementById('addCustomBtn')?.addEventListener('click', () => {
+        state.formData.customButtons.push({ label: '', roll: '1d20+0', type: 'custom' });
+        render();
+      });
+    }
+
+    function attackEditor(item, key, index) {
+      return `
+        <div class="editor-card input-grid-2">
+          ${builderInput('Name', `${key}.${index}.name`, item.name)}
+          ${builderInput('Attack Bonus', `${key}.${index}.attackBonus`, item.attackBonus, 'number')}
+          ${builderInput('Damage Dice', `${key}.${index}.damage`, item.damage)}
+          ${builderInput('Damage Bonus', `${key}.${index}.damageBonus`, item.damageBonus, 'number')}
+          ${builderInput('Crit', `${key}.${index}.crit`, item.crit)}
+          ${builderInput('Notes', `${key}.${index}.notes`, item.notes)}
+        </div>
+      `;
+    }
+
+    function saveCreature() {
+      const payload = deepClone(state.formData);
+      if (!payload.name.trim()) {
+        alert('Creature name is required.');
+        return;
+      }
+      if (!payload.id) payload.id = `creature-${Date.now()}`;
+      payload.hp.current = payload.hp.max;
+
+      const existingIndex = state.creatures.findIndex(c => c.id === payload.id);
+      if (existingIndex >= 0) state.creatures[existingIndex] = payload;
+      else state.creatures.push(payload);
+
+      state.selectedId = payload.id;
+      state.formData = defaultCreature();
+      state.page = 'viewer';
+      render();
+    }
+
+    function setPage(page) {
+      state.page = page;
+      render();
+    }
+
+    function bindGlobalEvents() {
+      document.getElementById('viewerTab').addEventListener('click', () => setPage('viewer'));
+      document.getElementById('builderTab').addEventListener('click', () => setPage('builder'));
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        state.search = e.target.value;
+        renderCreatureList();
+      });
+      document.getElementById('exportBtn').addEventListener('click', exportJson);
+      document.getElementById('importInput').addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (file) importJson(file);
+        e.target.value = '';
+      });
+      document.getElementById('builderCancel').addEventListener('click', () => {
+        state.formData = defaultCreature();
+        setPage('viewer');
+      });
+      document.getElementById('builderSave').addEventListener('click', saveCreature);
+    }
+
+    function render() {
+      document.getElementById('viewerPage').classList.toggle('hidden', state.page !== 'viewer');
+      document.getElementById('builderPage').classList.toggle('hidden', state.page !== 'builder');
+      document.getElementById('viewerTab').classList.toggle('active', state.page === 'viewer');
+      document.getElementById('builderTab').classList.toggle('active', state.page === 'builder');
+      document.getElementById('searchInput').value = state.search;
+      renderCreatureList();
+      renderMainContent();
+      renderRightSidebar();
+      renderBuilder();
+    }
+
+    bindGlobalEvents();
+    render();
+  </script>
+</body>
+</html>
